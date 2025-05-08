@@ -15,12 +15,12 @@ find_package(HIP REQUIRED)
 # 加入 HIP 原始碼
 add_executable(hippp
     src/main.cpp
-    src/example/vector_add_raii.cpp
+    src/example/vector_add_raii.hip
 )
 
 # 標記為 HIP 檔案
 set_source_files_properties(
     src/main.cpp
-    src/example/vector_add_raii.cpp
+    src/example/vector_add_raii.hip
     PROPERTIES LANGUAGE HIP
 )
