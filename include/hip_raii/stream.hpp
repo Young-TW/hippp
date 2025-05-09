@@ -1,3 +1,7 @@
+#pragma once
+
+#include <hip/hip_runtime.h>
+
 class HipStream {
 public:
     HipStream() {

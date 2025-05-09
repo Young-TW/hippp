@@ -1,0 +1,9 @@
+CompileFlags:
+  Add:
+    - -x
+    - hip
+    - --cuda-gpu-arch=gfx1102
+    - -isystem
+    - /opt/rocm/include
+    - -isystem
+    - /opt/rocm/hip/include

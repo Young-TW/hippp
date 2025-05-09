@@ -1,6 +1,8 @@
 #include <hip/hip_runtime.h>
 #include <cstdio>
+#include <iostream>
 #include <stdexcept>
+#include <iostream>
 #include <vector>
 
 #include "hip_raii/buffer.hpp"
@@ -15,7 +17,7 @@ __global__ void vector_add(const float* a, const float* b, float* c, int n) {
 }
 
 int vector_add_raii() {
-    const int N = 1024;
+    const int N = 1 << 20;
 
     HipBuffer<float> a(N), b(N), c(N);
     HipStream stream;
@@ -33,21 +35,19 @@ int vector_add_raii() {
     int blockSize = 256;
     int numBlocks = (N + blockSize - 1) / blockSize;
 
-    hipEventRecord(start.get(), stream.get());
+    hipEventRecord(start.get());
     vector_add<<<numBlocks, blockSize, 0, stream.get()>>>(a.get(), b.get(), c.get(), N);
-    hipEventRecord(stop.get(), stream.get());
+    hipEventRecord(stop.get());
 
     hipMemcpyAsync(h_c.data(), c.get(), N * sizeof(float), hipMemcpyDeviceToHost, stream.get());
 
-    hipStreamSynchronize(stream.get());
-
     float ms = 0.0f;
     hipEventElapsedTime(&ms, start.get(), stop.get());
-    printf("Kernel execution time(RAII): %f ms\n", ms);
+    std::cout << "Kernel execution time(RAII):" << ms <<  " ms\n";
 
     for (int i = 0; i < N; ++i) {
         if (h_c[i] != h_a[i] + h_b[i]) {
-            printf("Error at index %d: %f + %f != %f\n", i, h_a[i], h_b[i], h_c[i]);
+            std::cerr << "Error at index " << i << ": " << h_a[i] << " + " << h_b[i] << " != " << h_c[i] << "\n";
             break;
         }
     }
@@ -57,7 +57,7 @@ int vector_add_raii() {
 
 
 int vector_add_origin() {
-    const int N = 1024;
+    const int N = 1 << 20;
     const int size = N * sizeof(float);
 
     HipEvent start, stop;
@@ -78,6 +78,7 @@ int vector_add_origin() {
 
     int blockSize = 256;
     int numBlocks = (N + blockSize - 1) / blockSize;
+
     hipEventRecord(start.get());
     vector_add<<<numBlocks, blockSize>>>(a, b, c, N);
     hipEventRecord(stop.get());
@@ -86,11 +87,11 @@ int vector_add_origin() {
 
     float ms = 0.0f;
     hipEventElapsedTime(&ms, start.get(), stop.get());
-    printf("Kernel execution time(Origin): %f ms\n", ms);
+    std::cout << "Kernel execution time(Origin):" << ms <<  " ms\n";
 
     for (int i = 0; i < N; ++i) {
         if (h_c[i] != h_a[i] + h_b[i]) {
-            printf("Error at index %d: %f + %f != %f\n", i, h_a[i], h_b[i], h_c[i]);
+            std::cerr << "Error at index " << i << ": " << h_a[i] << " + " << h_b[i] << " != " << h_c[i] << "\n";
             break;
         }
     }

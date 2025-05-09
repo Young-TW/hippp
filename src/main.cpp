@@ -1,4 +1,3 @@
-// #include "example/vector_add_raii.cpp"
 int vector_add_raii();
 int vector_add_origin();
 
