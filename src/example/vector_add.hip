@@ -1,7 +1,6 @@
 #include <hip/hip_runtime.h>
 #include <cstdio>
 #include <iostream>
-#include <stdexcept>
 #include <iostream>
 #include <vector>
 
@@ -32,12 +31,19 @@ int vector_add_raii() {
     hipMemcpyAsync(a.get(), h_a.data(), N * sizeof(float), hipMemcpyHostToDevice, stream.get());
     hipMemcpyAsync(b.get(), h_b.data(), N * sizeof(float), hipMemcpyHostToDevice, stream.get());
 
+    // 確保資料傳輸完成
+    hipStreamSynchronize(stream.get());
+
     int blockSize = 256;
     int numBlocks = (N + blockSize - 1) / blockSize;
 
-    hipEventRecord(start.get());
+    // 開始計時
+    hipEventRecord(start.get(), stream.get());
     vector_add<<<numBlocks, blockSize, 0, stream.get()>>>(a.get(), b.get(), c.get(), N);
-    hipEventRecord(stop.get());
+    hipEventRecord(stop.get(), stream.get());
+
+    // 確保 kernel 執行完成
+    hipStreamSynchronize(stream.get());
 
     hipMemcpyAsync(h_c.data(), c.get(), N * sizeof(float), hipMemcpyDeviceToHost, stream.get());
 
@@ -79,9 +85,13 @@ int vector_add_origin() {
     int blockSize = 256;
     int numBlocks = (N + blockSize - 1) / blockSize;
 
+    // 開始計時
     hipEventRecord(start.get());
     vector_add<<<numBlocks, blockSize>>>(a, b, c, N);
     hipEventRecord(stop.get());
+
+    // 確保 kernel 執行完成
+    hipDeviceSynchronize();
 
     hipMemcpy(h_c, c, size, hipMemcpyDeviceToHost);
 

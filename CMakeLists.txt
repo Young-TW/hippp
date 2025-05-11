@@ -5,6 +5,8 @@ add_definitions(-D__HIP_PLATFORM_AMD__)
 
 include_directories(include)
 
+set(CMAKE_CXX_STANDARD 23)
+
 # 指定 HIP 編譯器路徑
 set(HIP_COMPILER clang)
 set(CMAKE_HIP_COMPILER /opt/rocm/bin/hipcc)
