@@ -8,7 +8,7 @@ include_directories(include)
 set(CMAKE_CXX_STANDARD 23)
 
 # 指定 HIP 編譯器路徑
-set(HIP_COMPILER clang)
+set(HIP_COMPILER /opt/rocm/bin/hipcc)
 set(CMAKE_HIP_COMPILER /opt/rocm/bin/hipcc)
 
 # HIP 工具鏈設定
