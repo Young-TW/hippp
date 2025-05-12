@@ -42,12 +42,11 @@ int vector_add_raii() {
     const int runs = 10000;
     float totalMs = 0.0f;
     for (int i = 0; i < runs; ++i) {
-        hipEventRecord(start, stream);
+        start.record(stream);
         vector_add<<<numBlocks, blockSize, 0, stream>>>(a.get(), b.get(), c.get(), N);
-        hipEventRecord(stop, stream);
+        stop.record(stream);
         stream.sync();
-        float ms = 0.0f;
-        hipEventElapsedTime(&ms, start, stop);
+        float ms = HipEvent::elapsedTime(start, stop);
         totalMs += ms;
     }
     std::cout << "Average RAII kernel time over " << runs << " runs: "
