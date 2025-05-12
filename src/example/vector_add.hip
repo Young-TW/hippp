@@ -31,21 +31,21 @@ int vector_add_raii() {
     }
     hipMemcpyAsync(a.get(), h_a.data(), size, hipMemcpyHostToDevice, stream);
     hipMemcpyAsync(b.get(), h_b.data(), size, hipMemcpyHostToDevice, stream);
-    hipStreamSynchronize(stream);
+    stream.sync();
 
     // Warm-up
     hipDeviceSynchronize();
     vector_add<<<numBlocks, blockSize, 0, stream>>>(a.get(), b.get(), c.get(), N);
-    hipStreamSynchronize(stream);
+    stream.sync();
 
     // Measurement
-    const int runs = 1000000;
+    const int runs = 10000;
     float totalMs = 0.0f;
     for (int i = 0; i < runs; ++i) {
         hipEventRecord(start, stream);
         vector_add<<<numBlocks, blockSize, 0, stream>>>(a.get(), b.get(), c.get(), N);
         hipEventRecord(stop, stream);
-        hipStreamSynchronize(stream);
+        stream.sync();
         float ms = 0.0f;
         hipEventElapsedTime(&ms, start, stop);
         totalMs += ms;
@@ -83,7 +83,7 @@ int vector_add_origin() {
     vector_add<<<numBlocks, blockSize>>>(a, b, c, N);
     hipDeviceSynchronize();
 
-    const int runs = 1000000;
+    const int runs = 10000;
     float totalMs = 0.0f;
     for (int i = 0; i < runs; ++i) {
         hipEventRecord(start, 0);
