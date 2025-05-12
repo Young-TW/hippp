@@ -16,79 +16,112 @@ __global__ void vector_add(const float* a, const float* b, float* c, int n) {
 }
 
 int vector_add_raii() {
-    const int N = 1 << 20;
-    const size_t size = N * sizeof(float);
-    const int blockSize = 256;
-    const int numBlocks = (N + blockSize - 1) / blockSize;
+    constexpr int N = 1 << 20;
+    constexpr size_t size = N * sizeof(float);
+    constexpr int blockSize = 256;
+    constexpr int numBlocks = (N + blockSize - 1) / blockSize;
+
+    // Use RAII-wrapped resources
     HipBuffer<float> a(N), b(N), c(N);
     HipStream stream;
-    HipEvent start, stop;
 
+    // Initialize host data
     std::vector<float> h_a(N), h_b(N), h_c(N);
-    for (int i = 0; i < N; ++i) {
-        h_a[i] = static_cast<float>(i);
-        h_b[i] = static_cast<float>(i);
-    }
+    std::generate(h_a.begin(), h_a.end(), [n = 0]() mutable { return static_cast<float>(n++); });
+    std::generate(h_b.begin(), h_b.end(), [n = 0]() mutable { return static_cast<float>(n++); });
+
+    // Copy data from host to device
     hipMemcpyAsync(a.get(), h_a.data(), size, hipMemcpyHostToDevice, stream);
     hipMemcpyAsync(b.get(), h_b.data(), size, hipMemcpyHostToDevice, stream);
     stream.sync();
 
-    // Warm-up
-    hipDeviceSynchronize();
+    // Warm-up execution
     vector_add<<<numBlocks, blockSize, 0, stream>>>(a.get(), b.get(), c.get(), N);
     stream.sync();
 
-    // Measurement
-    const int runs = 10000;
+    // Measure execution time
+    constexpr int runs = 10000;
     float totalMs = 0.0f;
+
     for (int i = 0; i < runs; ++i) {
+        HipEvent start, stop; // Use new events for each measurement
         start.record(stream);
         vector_add<<<numBlocks, blockSize, 0, stream>>>(a.get(), b.get(), c.get(), N);
         stop.record(stream);
         stream.sync();
-        float ms = HipEvent::elapsedTime(start, stop);
-        totalMs += ms;
+        totalMs += HipEvent::elapsedTime(start, stop);
     }
+
     std::cout << "Average RAII kernel time over " << runs << " runs: "
               << (totalMs / runs) << " ms\n";
+
+    // Copy results back to host (if needed for verification)
+    hipMemcpyAsync(h_c.data(), c.get(), size, hipMemcpyDeviceToHost, stream);
+    stream.sync();
+
     return 0;
 }
 
 int vector_add_origin() {
-    const int N = 1 << 20;
-    const size_t size = N * sizeof(float);
-    const int blockSize = 256;
-    const int numBlocks = (N + blockSize - 1) / blockSize;
+    constexpr int N = 1 << 20;
+    constexpr size_t size = N * sizeof(float);
+    constexpr int blockSize = 256;
+    constexpr int numBlocks = (N + blockSize - 1) / blockSize;
 
-    float *a, *b, *c;
-    hipMalloc((void**)&a, size);
-    hipMalloc((void**)&b, size);
-    hipMalloc((void**)&c, size);
-
-    hipEvent_t start, stop;
-    hipEventCreate(&start);
-    hipEventCreate(&stop);
-
-    std::vector<float> h_a(N), h_b(N), h_c(N);
-    for (int i = 0; i < N; ++i) {
-        h_a[i] = static_cast<float>(i);
-        h_b[i] = static_cast<float>(i);
+    // Allocate device memory
+    float *a = nullptr, *b = nullptr, *c = nullptr;
+    if (hipMalloc(&a, size) != hipSuccess || 
+        hipMalloc(&b, size) != hipSuccess || 
+        hipMalloc(&c, size) != hipSuccess) {
+        std::cerr << "Failed to allocate device memory." << std::endl;
+        return -1;
     }
 
-    hipMemcpy(a, h_a.data(), size, hipMemcpyHostToDevice);
-    hipMemcpy(b, h_b.data(), size, hipMemcpyHostToDevice);
+    // Create events and stream
+    hipEvent_t start, stop;
+    if (hipEventCreate(&start) != hipSuccess || hipEventCreate(&stop) != hipSuccess) {
+        std::cerr << "Failed to create events." << std::endl;
+        hipFree(a);
+        hipFree(b);
+        hipFree(c);
+        return -1;
+    }
 
-    hipDeviceSynchronize();
-    vector_add<<<numBlocks, blockSize>>>(a, b, c, N);
-    hipDeviceSynchronize();
+    hipStream_t stream;
+    if (hipStreamCreate(&stream) != hipSuccess) {
+        std::cerr << "Failed to create stream." << std::endl;
+        hipFree(a);
+        hipFree(b);
+        hipFree(c);
+        hipEventDestroy(start);
+        hipEventDestroy(stop);
+        return -1;
+    }
 
-    const int runs = 10000;
+    // Initialize host data
+    std::vector<float> h_a(N), h_b(N), h_c(N);
+    std::generate(h_a.begin(), h_a.end(), [n = 0]() mutable { return static_cast<float>(n++); });
+    std::generate(h_b.begin(), h_b.end(), [n = 0]() mutable { return static_cast<float>(n++); });
+
+    // Copy data from host to device
+    hipMemcpyAsync(a, h_a.data(), size, hipMemcpyHostToDevice, stream);
+    hipMemcpyAsync(b, h_b.data(), size, hipMemcpyHostToDevice, stream);
+    hipStreamSynchronize(stream);
+
+    // Warm-up execution
+    vector_add<<<numBlocks, blockSize, 0, stream>>>(a, b, c, N);
+    hipStreamSynchronize(stream);
+
+    // Measure execution time
+    constexpr int runs = 10000;
     float totalMs = 0.0f;
+
     for (int i = 0; i < runs; ++i) {
-        hipEventRecord(start, 0);
-        vector_add<<<numBlocks, blockSize>>>(a, b, c, N);
-        hipEventRecord(stop, 0);
-        hipDeviceSynchronize();
+        hipEventRecord(start, stream);
+        vector_add<<<numBlocks, blockSize, 0, stream>>>(a, b, c, N);
+        hipEventRecord(stop, stream);
+        hipStreamSynchronize(stream);
+
         float ms = 0.0f;
         hipEventElapsedTime(&ms, start, stop);
         totalMs += ms;
@@ -97,12 +130,17 @@ int vector_add_origin() {
     std::cout << "Average Origin kernel time over " << runs << " runs: "
               << (totalMs / runs) << " ms\n";
 
-    // 釋放資源
+    // Copy results back to host (if needed for verification)
+    hipMemcpyAsync(h_c.data(), c, size, hipMemcpyDeviceToHost, stream);
+    hipStreamSynchronize(stream);
+
+    // Release resources
     hipFree(a);
     hipFree(b);
     hipFree(c);
     hipEventDestroy(start);
     hipEventDestroy(stop);
+    hipStreamDestroy(stream);
 
     return 0;
 }
