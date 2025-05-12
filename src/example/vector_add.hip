@@ -29,25 +29,25 @@ int vector_add_raii() {
         h_a[i] = static_cast<float>(i);
         h_b[i] = static_cast<float>(i);
     }
-    hipMemcpyAsync(a.get(), h_a.data(), size, hipMemcpyHostToDevice, stream.get());
-    hipMemcpyAsync(b.get(), h_b.data(), size, hipMemcpyHostToDevice, stream.get());
-    hipStreamSynchronize(stream.get());
+    hipMemcpyAsync(a.get(), h_a.data(), size, hipMemcpyHostToDevice, stream);
+    hipMemcpyAsync(b.get(), h_b.data(), size, hipMemcpyHostToDevice, stream);
+    hipStreamSynchronize(stream);
 
     // Warm-up
     hipDeviceSynchronize();
-    vector_add<<<numBlocks, blockSize, 0, stream.get()>>>(a.get(), b.get(), c.get(), N);
-    hipStreamSynchronize(stream.get());
+    vector_add<<<numBlocks, blockSize, 0, stream>>>(a.get(), b.get(), c.get(), N);
+    hipStreamSynchronize(stream);
 
     // Measurement
     const int runs = 1000000;
     float totalMs = 0.0f;
     for (int i = 0; i < runs; ++i) {
-        hipEventRecord(start.get(), stream.get());
-        vector_add<<<numBlocks, blockSize, 0, stream.get()>>>(a.get(), b.get(), c.get(), N);
-        hipEventRecord(stop.get(), stream.get());
-        hipStreamSynchronize(stream.get());
+        hipEventRecord(start, stream);
+        vector_add<<<numBlocks, blockSize, 0, stream>>>(a.get(), b.get(), c.get(), N);
+        hipEventRecord(stop, stream);
+        hipStreamSynchronize(stream);
         float ms = 0.0f;
-        hipEventElapsedTime(&ms, start.get(), stop.get());
+        hipEventElapsedTime(&ms, start, stop);
         totalMs += ms;
     }
     std::cout << "Average RAII kernel time over " << runs << " runs: "
@@ -55,48 +55,55 @@ int vector_add_raii() {
     return 0;
 }
 
-
 int vector_add_origin() {
     const int N = 1 << 20;
     const size_t size = N * sizeof(float);
     const int blockSize = 256;
     const int numBlocks = (N + blockSize - 1) / blockSize;
+
     float *a, *b, *c;
     hipMalloc((void**)&a, size);
     hipMalloc((void**)&b, size);
     hipMalloc((void**)&c, size);
-    HipEvent start, stop;
+
+    hipEvent_t start, stop;
+    hipEventCreate(&start);
+    hipEventCreate(&stop);
 
     std::vector<float> h_a(N), h_b(N), h_c(N);
     for (int i = 0; i < N; ++i) {
         h_a[i] = static_cast<float>(i);
         h_b[i] = static_cast<float>(i);
     }
+
     hipMemcpy(a, h_a.data(), size, hipMemcpyHostToDevice);
     hipMemcpy(b, h_b.data(), size, hipMemcpyHostToDevice);
 
-    // Warm-up
     hipDeviceSynchronize();
     vector_add<<<numBlocks, blockSize>>>(a, b, c, N);
     hipDeviceSynchronize();
 
-    // Measurement
     const int runs = 1000000;
     float totalMs = 0.0f;
     for (int i = 0; i < runs; ++i) {
-        hipEventRecord(start.get());
+        hipEventRecord(start, 0);
         vector_add<<<numBlocks, blockSize>>>(a, b, c, N);
-        hipEventRecord(stop.get());
+        hipEventRecord(stop, 0);
         hipDeviceSynchronize();
         float ms = 0.0f;
-        hipEventElapsedTime(&ms, start.get(), stop.get());
+        hipEventElapsedTime(&ms, start, stop);
         totalMs += ms;
     }
+
     std::cout << "Average Origin kernel time over " << runs << " runs: "
               << (totalMs / runs) << " ms\n";
 
+    // 釋放資源
     hipFree(a);
     hipFree(b);
     hipFree(c);
+    hipEventDestroy(start);
+    hipEventDestroy(stop);
+
     return 0;
 }
