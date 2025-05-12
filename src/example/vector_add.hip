@@ -31,8 +31,8 @@ int vector_add_raii() {
     std::generate(h_b.begin(), h_b.end(), [n = 0]() mutable { return static_cast<float>(n++); });
 
     // Copy data from host to device
-    hipMemcpyAsync(a.get(), h_a.data(), size, hipMemcpyHostToDevice, stream);
-    hipMemcpyAsync(b.get(), h_b.data(), size, hipMemcpyHostToDevice, stream);
+    a.copyFromHostAsync(h_a.data(), stream);
+    b.copyFromHostAsync(h_b.data(), stream);
     stream.sync();
 
     // Warm-up execution
@@ -56,7 +56,7 @@ int vector_add_raii() {
               << (totalMs / runs) << " ms\n";
 
     // Copy results back to host (if needed for verification)
-    hipMemcpyAsync(h_c.data(), c.get(), size, hipMemcpyDeviceToHost, stream);
+    c.copyToHostAsync(h_c.data(), stream);
     stream.sync();
 
     return 0;

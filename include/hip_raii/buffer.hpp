@@ -3,7 +3,6 @@
 #include <stdexcept>
 #include <cstddef>
 
-
 template <typename T>
 class HipBuffer {
 public:
@@ -52,6 +51,28 @@ public:
 
     /// @return number of elements stored (not bytes).
     std::size_t size() const { return elements_; }
+
+    /// @brief Asynchronously copy data from host to device.
+    /// @param hostData Pointer to the host data.
+    /// @param stream HIP stream to use for the copy (default: nullptr).
+    void copyFromHostAsync(const T* hostData, hipStream_t stream = nullptr) {
+        hipError_t err = hipMemcpyAsync(ptr_, hostData, elements_ * sizeof(T),
+                                        hipMemcpyHostToDevice, stream);
+        if (err != hipSuccess) {
+            throw std::runtime_error("hipMemcpyAsync (Host to Device) failed");
+        }
+    }
+
+    /// @brief Asynchronously copy data from device to host.
+    /// @param hostData Pointer to the host data buffer.
+    /// @param stream HIP stream to use for the copy (default: nullptr).
+    void copyToHostAsync(T* hostData, hipStream_t stream = nullptr) const {
+        hipError_t err = hipMemcpyAsync(hostData, ptr_, elements_ * sizeof(T),
+                                        hipMemcpyDeviceToHost, stream);
+        if (err != hipSuccess) {
+            throw std::runtime_error("hipMemcpyAsync (Device to Host) failed");
+        }
+    }
 
 private:
     T*          ptr_;
