@@ -4,16 +4,11 @@
 #include <iostream>
 #include <vector>
 
+#include "device/vector_add.hip"
+
 #include "hip_raii/buffer.hpp"
 #include "hip_raii/stream.hpp"
 #include "hip_raii/event.hpp"
-
-__global__ void vector_add(const float* a, const float* b, float* c, int n) {
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx < n) {
-        c[idx] = a[idx] + b[idx];
-    }
-}
 
 int vector_add_raii() {
     constexpr int N = 1 << 20;
