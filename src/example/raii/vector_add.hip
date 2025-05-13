@@ -4,9 +4,7 @@
 #include <iostream>
 #include <vector>
 
-#include "hip_raii/buffer.hpp"
-#include "hip_raii/stream.hpp"
-#include "hip_raii/event.hpp"
+#include "hip_raii/hip_raii.hpp"
 
 __global__ void vector_add(const float* a, const float* b, float* c, int n);
 
