@@ -18,12 +18,8 @@ hippp is a C++ wrapper for the HIP API, designed to simplify the process of writ
 - [ ] **Memory Pools** (`hipMemPoolCreate` / `hipMemPoolDestroy`) → `HipMemPool`
 - [ ] **External Library Handles** (rocBLAS, rocFFT, rocRAND) → `RocblasHandle`, `RocfftPlan`, `RocrandGenerator`
 
-
 ## Benchmark
 
-### Vector Addition
-
-executed by Radeon RX 7600XT
-
-Average RAII kernel time over 1000000 runs: 0.0724291 ms
-Average Origin kernel time over 1000000 runs: 0.0726434 ms
+| Tasks | Count | GPU | Origin | RAII |
+|-------|-------|-----|--------|------|
+| Vector Addition | 1,000,000 | RX 7600 XT | 0.0726434 ms | 0.0724291 ms |
