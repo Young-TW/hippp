@@ -1,6 +1,7 @@
 #include <hip/hip_runtime.h>
 #include <vector>
-#include "../device/vector_add.hip"
+
+#include "example/device/vector_add.h"
 
 std::vector<float> vector_add_origin(const std::vector<float>& h_a, const std::vector<float>& h_b) {
     if (h_a.size() != h_b.size()) {

@@ -1,8 +1,9 @@
 #include <hip/hip_runtime.h>
 #include <vector>
+
 #include "hip_raii/hip_raii.hpp"
 
-__global__ void vector_add(const float* a, const float* b, float* c, int n);
+#include "example/device/vector_add.h"
 
 std::vector<float> vector_add_raii(const std::vector<float>& h_a, const std::vector<float>& h_b) {
     if (h_a.size() != h_b.size()) {
