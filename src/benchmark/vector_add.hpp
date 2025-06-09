@@ -6,21 +6,31 @@
 #include "example/raii/vector_add.h"
 
 int benchmark_vector_add() {
-    std::vector<float> h_a(1024, 1.0f);
-    std::vector<float> h_b(1024, 2.0f);
+    std::vector<float> h_a(1 << 20, 1.0f);
+    std::vector<float> h_b(1 << 20, 2.0f);
 
-    auto start = std::chrono::high_resolution_clock::now();
-    std::vector<float> h_c_raii = vector_add_raii(h_a, h_b);
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration_raii = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+    vector_add_raii(h_a, h_b);
+    vector_add_origin(h_a, h_b);
 
-    start = std::chrono::high_resolution_clock::now();
-    std::vector<float> h_c_origin = vector_add_origin(h_a, h_b);
-    end = std::chrono::high_resolution_clock::now();
-    auto duration_origin = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+    constexpr int runs = 100;
+    long long total_raii = 0, total_origin = 0;
 
-    std::cout << "[Benchmark] Vector Add: RAII version took " << duration_raii << " microseconds\n";
-    std::cout << "[Benchmark] Vector Add: Original version took " << duration_origin << " microseconds\n";
+    for (int i = 0; i < runs; ++i) {
+        auto start = std::chrono::high_resolution_clock::now();
+        std::vector<float> h_c_raii = vector_add_raii(h_a, h_b);
+        auto end = std::chrono::high_resolution_clock::now();
+        total_raii += std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+    }
+
+    for (int i = 0; i < runs; ++i) {
+        auto start = std::chrono::high_resolution_clock::now();
+        std::vector<float> h_c_origin = vector_add_origin(h_a, h_b);
+        auto end = std::chrono::high_resolution_clock::now();
+        total_origin += std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+    }
+
+    std::cout << "[Benchmark] Vector Add: RAII version avg " << (total_raii / runs) << " microseconds\n";
+    std::cout << "[Benchmark] Vector Add: Original version avg " << (total_origin / runs) << " microseconds\n";
 
     return 0;
 }
