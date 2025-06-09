@@ -14,20 +14,14 @@ std::vector<float> vector_add_raii(const std::vector<float>& h_a, const std::vec
     constexpr int blockSize = 256;
     int numBlocks = (N + blockSize - 1) / blockSize;
 
-    // Use RAII-wrapped resources
     HipBuffer<float> a(N), b(N), c(N);
     HipStream stream;
 
-    // Copy data from host to device
     a.copyFromHostAsync(h_a.data(), stream);
     b.copyFromHostAsync(h_b.data(), stream);
-    stream.sync();
 
-    // Launch kernel
     vector_add<<<numBlocks, blockSize, 0, stream>>>(a.get(), b.get(), c.get(), N);
-    stream.sync();
 
-    // Copy results back to host
     std::vector<float> h_c(N);
     c.copyToHostAsync(h_c.data(), stream);
     stream.sync();
