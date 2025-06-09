@@ -1,3 +1,4 @@
+#include <iostream>
 #include <chrono>
 #include <vector>
 
@@ -18,8 +19,8 @@ int benchmark_vector_add() {
     end = std::chrono::high_resolution_clock::now();
     auto duration_origin = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
 
-    printf("RAII version took %lld microseconds\n", duration_raii);
-    printf("Original version took %lld microseconds\n", duration_origin);
+    std::cout << "[Benchmark] Vector Add: RAII version took " << duration_raii << " microseconds\n";
+    std::cout << "[Benchmark] Vector Add: Original version took " << duration_origin << " microseconds\n";
 
     return 0;
 }
