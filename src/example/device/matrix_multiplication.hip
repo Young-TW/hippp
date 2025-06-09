@@ -1,5 +1,3 @@
-#pragma once
-
 #include <hip/hip_runtime.h>
 
 // C = A * B
