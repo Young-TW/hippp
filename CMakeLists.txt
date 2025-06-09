@@ -18,15 +18,21 @@ find_package(HIP REQUIRED)
 add_executable(hippp
     src/main.cpp
     src/example/origin/vector_add.hip
+    src/example/origin/matrix_multiplication.hip
     src/example/raii/vector_add.hip
+    src/example/raii/matrix_multiplication.hip
     src/example/device/vector_add.hip
+    src/example/device/matrix_multiplication.hip
 )
 
 # 標記為 HIP 檔案
 set_source_files_properties(
     src/main.cpp
     src/example/origin/vector_add.hip
+    src/example/origin/matrix_multiplication.hip
     src/example/raii/vector_add.hip
+    src/example/raii/matrix_multiplication.hip
     src/example/device/vector_add.hip
+    src/example/device/matrix_multiplication.hip
     PROPERTIES LANGUAGE HIP
 )

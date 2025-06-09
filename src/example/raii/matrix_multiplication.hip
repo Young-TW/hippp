@@ -24,7 +24,7 @@ std::vector<float> matrix_multiplication_raii(const std::vector<float>& h_A,
     HipStream stream;
     a.copyFromHostAsync(h_A.data(), stream);
     b.copyFromHostAsync(h_B.data(), stream);
-    matrix_multiplication_raii<<<grid, block, 0, stream>>>(a.get(), b.get(), c.get(), M, N, K);
+    matrix_multiplication<<<grid, block, 0, stream>>>(a.get(), b.get(), c.get(), M, N, K);
     hipError_t err = hipGetLastError();
     if (err != hipSuccess) {
         throw std::runtime_error("Kernel launch failed: " + std::string(hipGetErrorString(err)));
