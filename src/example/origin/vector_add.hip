@@ -1,5 +1,6 @@
 #include <hip/hip_runtime.h>
 #include <vector>
+#include <stdexcept>
 
 #include "example/device/vector_add.h"
 
@@ -13,36 +14,48 @@ std::vector<float> vector_add_origin(const std::vector<float>& h_a, const std::v
     constexpr int blockSize = 256;
     int numBlocks = (N + blockSize - 1) / blockSize;
 
-    // Allocate device memory
     float *a = nullptr, *b = nullptr, *c = nullptr;
-    if (hipMalloc(&a, size) != hipSuccess ||
-        hipMalloc(&b, size) != hipSuccess ||
-        hipMalloc(&c, size) != hipSuccess) {
+    hipError_t err;
+
+    if ((err = hipMalloc(&a, size)) != hipSuccess ||
+        (err = hipMalloc(&b, size)) != hipSuccess ||
+        (err = hipMalloc(&c, size)) != hipSuccess) {
+        if (a) hipFree(a);
+        if (b) hipFree(b);
+        if (c) hipFree(c);
         throw std::runtime_error("Failed to allocate device memory.");
     }
 
-    // Create stream
     hipStream_t stream;
-    if (hipStreamCreate(&stream) != hipSuccess) {
+    if ((err = hipStreamCreate(&stream)) != hipSuccess) {
         hipFree(a); hipFree(b); hipFree(c);
         throw std::runtime_error("Failed to create stream.");
     }
 
-    // Copy data from host to device
-    hipMemcpyAsync(a, h_a.data(), size, hipMemcpyHostToDevice, stream);
-    hipMemcpyAsync(b, h_b.data(), size, hipMemcpyHostToDevice, stream);
-    hipStreamSynchronize(stream);
+    if ((err = hipMemcpyAsync(a, h_a.data(), size, hipMemcpyHostToDevice, stream)) != hipSuccess ||
+        (err = hipMemcpyAsync(b, h_b.data(), size, hipMemcpyHostToDevice, stream)) != hipSuccess) {
+        hipFree(a); hipFree(b); hipFree(c); hipStreamDestroy(stream);
+        throw std::runtime_error("Failed to copy data to device.");
+    }
 
-    // Launch kernel
     vector_add<<<numBlocks, blockSize, 0, stream>>>(a, b, c, N);
-    hipStreamSynchronize(stream);
 
-    // Copy result back to host
+    if ((err = hipGetLastError()) != hipSuccess) {
+        hipFree(a); hipFree(b); hipFree(c); hipStreamDestroy(stream);
+        throw std::runtime_error("Kernel launch failed.");
+    }
+
     std::vector<float> h_c(N);
-    hipMemcpyAsync(h_c.data(), c, size, hipMemcpyDeviceToHost, stream);
-    hipStreamSynchronize(stream);
+    if ((err = hipMemcpyAsync(h_c.data(), c, size, hipMemcpyDeviceToHost, stream)) != hipSuccess) {
+        hipFree(a); hipFree(b); hipFree(c); hipStreamDestroy(stream);
+        throw std::runtime_error("Failed to copy result to host.");
+    }
 
-    // Release resources
+    if ((err = hipStreamSynchronize(stream)) != hipSuccess) {
+        hipFree(a); hipFree(b); hipFree(c); hipStreamDestroy(stream);
+        throw std::runtime_error("Stream synchronize failed.");
+    }
+
     hipFree(a);
     hipFree(b);
     hipFree(c);
