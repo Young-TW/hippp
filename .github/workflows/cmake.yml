@@ -21,7 +21,7 @@ jobs:
           wget -qO - http://repo.radeon.com/rocm/rocm.gpg.key | sudo apt-key add -
           echo 'deb [arch=amd64] http://repo.radeon.com/rocm/apt/6.0/ focal main' | sudo tee /etc/apt/sources.list.d/rocm.list
           sudo apt-get update
-          sudo apt-get install -y hip-base hipcc hip-dev hip-runtime-amd rocm-agent-enumerator
+          sudo apt-get install -y hip-base hipcc hip-dev hip-runtime-amd
           echo "/opt/rocm/bin" >> $GITHUB_PATH
           echo "export PATH=/opt/rocm/bin:$PATH" >> $GITHUB_ENV
           echo "export HIP_PATH=/opt/rocm" >> $GITHUB_ENV
@@ -39,6 +39,13 @@ jobs:
         run: |
           ls -l /opt/rocm/lib/cmake/hip-lang || true
           ls -l /opt/rocm/lib64/cmake/hip-lang || true
+
+      - name: Fake rocm_agent_enumerator for CI
+        run: |
+          if [ ! -f /opt/rocm/bin/rocm_agent_enumerator ]; then
+            echo -e '#!/bin/bash\necho gfx900' | sudo tee /opt/rocm/bin/rocm_agent_enumerator > /dev/null
+            sudo chmod +x /opt/rocm/bin/rocm_agent_enumerator
+          fi
 
       - name: Configure CMake
         run: cmake -B build -G Ninja -DHIP_ROOT_DIR=/opt/rocm -DHIP_ARCHITECTURES=gfx900
