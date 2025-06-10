@@ -20,6 +20,7 @@ hippp is a C++ wrapper for the HIP API, designed to simplify the process of writ
 
 ## Benchmark
 
-| Tasks | Count | GPU | Origin | RAII |
-|-------|-------|-----|--------|------|
-| Vector Addition | 1,000,000 | RX 7600 XT | 0.0726434 ms | 0.0724291 ms |
+| Tasks | Size | GPU | Origin | RAII |
+|-------|------|-----|--------|------|
+| Vector Addition | 1,048576 | RX 7600 XT | 2003 µs | 1995 µs |
+| Matrix Multiplication | 1,024 x 1,024 | RX 7600 XT | 7215 µs | 8008 µs |
