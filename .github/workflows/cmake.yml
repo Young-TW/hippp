@@ -27,19 +27,6 @@ jobs:
           echo "export HIP_PATH=/opt/rocm" >> $GITHUB_ENV
           echo "export ROCM_PATH=/opt/rocm" >> $GITHUB_ENV
 
-      - name: List ROCm bin
-        run: ls -l /opt/rocm/bin || true
-
-      - name: Check hipcc
-        run: |
-          which hipcc
-          hipcc --version || true
-
-      - name: List HIP CMake config
-        run: |
-          ls -l /opt/rocm/lib/cmake/hip-lang || true
-          ls -l /opt/rocm/lib64/cmake/hip-lang || true
-
       - name: Fake rocm_agent_enumerator for CI
         run: |
           if [ ! -f /opt/rocm/bin/rocm_agent_enumerator ]; then
