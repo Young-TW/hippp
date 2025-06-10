@@ -28,7 +28,7 @@ jobs:
           echo "export ROCM_PATH=/opt/rocm" >> $GITHUB_ENV
 
       - name: Configure CMake
-        run: cmake -B build -G Ninja
+        run: cmake -B build -G Ninja -DHIP_ROOT_DIR=/opt/rocm
 
       - name: Build
         run: cmake --build build
