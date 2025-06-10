@@ -5,14 +5,13 @@
 #include "example/origin/vector_add.h"
 #include "example/raii/vector_add.h"
 
-int benchmark_vector_add() {
+int benchmark_vector_add(unsigned runs) {
     std::vector<float> h_a(1 << 20, 1.0f);
     std::vector<float> h_b(1 << 20, 2.0f);
 
     vector_add_raii(h_a, h_b);
     vector_add_origin(h_a, h_b);
 
-    constexpr int runs = 100;
     long long total_raii = 0, total_origin = 0;
 
     for (int i = 0; i < runs; ++i) {
