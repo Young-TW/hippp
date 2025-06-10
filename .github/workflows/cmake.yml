@@ -9,40 +9,25 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
+    container:
+      image: rocm/dev-ubuntu-22.04:6.0
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake g++ ninja-build wget
-          wget -qO - http://repo.radeon.com/rocm/rocm.gpg.key | sudo apt-key add -
-          echo 'deb [arch=amd64] http://repo.radeon.com/rocm/apt/6.0/ focal main' | sudo tee /etc/apt/sources.list.d/rocm.list
-          sudo apt-get update
-          sudo apt-get install -y hip-base hipcc hip-dev hip-runtime-amd rocm-device-libs
-          echo "/opt/rocm/bin" >> $GITHUB_PATH
-          echo "export PATH=/opt/rocm/bin:$PATH" >> $GITHUB_ENV
-          echo "export HIP_PATH=/opt/rocm" >> $GITHUB_ENV
-          echo "export ROCM_PATH=/opt/rocm" >> $GITHUB_ENV
+      - name: Install build tools
+        run: apt-get update && apt-get install -y cmake g++ ninja-build
 
       - name: Fake rocm_agent_enumerator for CI
         run: |
           if [ ! -f /opt/rocm/bin/rocm_agent_enumerator ]; then
-            echo -e '#!/bin/bash\necho gfx900' | sudo tee /opt/rocm/bin/rocm_agent_enumerator > /dev/null
-            sudo chmod +x /opt/rocm/bin/rocm_agent_enumerator
+            echo -e '#!/bin/bash\necho gfx900' > /opt/rocm/bin/rocm_agent_enumerator
+            chmod +x /opt/rocm/bin/rocm_agent_enumerator
           fi
 
-      - name: List ROCm bitcode
-        run: |
-          ls -l /opt/rocm/amdgcn/bitcode || ls -l /opt/rocm/lib/bitcode || ls -l /opt/rocm/lib
-
       - name: Configure CMake
-        run: cmake -B build -G Ninja -DHIP_ROOT_DIR=/opt/rocm -DHIP_ARCHITECTURES=gfx900 -DHIP_DEVICE_LIB_PATH=/opt/rocm/lib -DCMAKE_HIP_FLAGS="--rocm-path=/opt/rocm"
+        run: cmake -B build -G Ninja -DHIP_ROOT_DIR=/opt/rocm -DHIP_ARCHITECTURES=gfx900
 
       - name: Build
         run: cmake --build build
-
-      # - name: Test
-      #   run: ctest --test-dir build
