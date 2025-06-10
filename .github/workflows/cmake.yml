@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout repository
@@ -21,14 +21,19 @@ jobs:
           wget -qO - http://repo.radeon.com/rocm/rocm.gpg.key | sudo apt-key add -
           echo 'deb [arch=amd64] http://repo.radeon.com/rocm/apt/6.0/ ubuntu main' | sudo tee /etc/apt/sources.list.d/rocm.list
           sudo apt-get update
-          sudo apt-get install -y hip-base
+          sudo apt-get install -y rocm-dev
           echo "/opt/rocm/bin" >> $GITHUB_PATH
           echo "export PATH=/opt/rocm/bin:$PATH" >> $GITHUB_ENV
           echo "export HIP_PATH=/opt/rocm" >> $GITHUB_ENV
           echo "export ROCM_PATH=/opt/rocm" >> $GITHUB_ENV
 
+      - name: Check hipcc
+        run: |
+          which hipcc
+          hipcc --version || true
+
       - name: Configure CMake
-        run: cmake -B build -G Ninja -DHIP_ROOT_DIR=/opt/rocm
+        run: cmake -B build -G Ninja -DHIP_ROOT_DIR=/opt/rocm -DCMAKE_HIP_COMPILER=/opt/rocm/bin/hipcc
 
       - name: Build
         run: cmake --build build
