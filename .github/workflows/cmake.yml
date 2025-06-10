@@ -34,8 +34,12 @@ jobs:
             sudo chmod +x /opt/rocm/bin/rocm_agent_enumerator
           fi
 
+      - name: List ROCm bitcode
+        run: |
+          ls -l /opt/rocm/amdgcn/bitcode || ls -l /opt/rocm/lib/bitcode || ls -l /opt/rocm/lib
+
       - name: Configure CMake
-        run: cmake -B build -G Ninja -DHIP_ROOT_DIR=/opt/rocm -DHIP_ARCHITECTURES=gfx900 -DHIP_DEVICE_LIB_PATH=/opt/rocm/amdgcn/bitcode
+        run: cmake -B build -G Ninja -DHIP_ROOT_DIR=/opt/rocm -DHIP_ARCHITECTURES=gfx900 -DHIP_DEVICE_LIB_PATH=/opt/rocm/lib -DCMAKE_HIP_FLAGS="--rocm-path=/opt/rocm"
 
       - name: Build
         run: cmake --build build
