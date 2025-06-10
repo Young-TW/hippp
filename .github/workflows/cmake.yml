@@ -27,6 +27,12 @@ jobs:
           echo "export HIP_PATH=/opt/rocm" >> $GITHUB_ENV
           echo "export ROCM_PATH=/opt/rocm" >> $GITHUB_ENV
 
+      - name: List ROCm bin
+        run: ls -l /opt/rocm/bin || true
+
+      - name: List ROCm
+        run: ls -l /opt/rocm || true
+
       - name: Check hipcc
         run: |
           which hipcc
