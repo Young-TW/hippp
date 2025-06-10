@@ -1,0 +1,36 @@
+name: Build HIPPP
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake g++ ninja-build wget
+          # 安裝 ROCm repo
+          wget -qO - http://repo.radeon.com/rocm/rocm.gpg.key | sudo apt-key add -
+          echo 'deb [arch=amd64] http://repo.radeon.com/rocm/apt/6.0/ ubuntu main' | sudo tee /etc/apt/sources.list.d/rocm.list
+          sudo apt-get update
+          sudo apt-get install -y hip-base
+
+
+      - name: Configure CMake
+        run: cmake -B build -G Ninja
+
+      - name: Build
+        run: cmake --build build
+
+      # run tests(optional)
+      # - name: Test
+      #   run: ctest --test-dir build
