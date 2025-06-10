@@ -1,4 +1,5 @@
 #include <hip/hip_runtime.h>
+
 #include <vector>
 
 #include "example/device/matrix_multiplication.h"
@@ -7,13 +8,14 @@ std::vector<float> matrix_multiplication_origin(const std::vector<float>& h_A,
                                                 const std::vector<float>& h_B,
                                                 int M, int N, int K) {
     if (h_A.size() != M * K || h_B.size() != K * N) {
-        throw std::invalid_argument("Input matrices must have compatible sizes.");
+        throw std::invalid_argument(
+            "Input matrices must have compatible sizes.");
     }
 
     size_t size_A = h_A.size() * sizeof(float);
     size_t size_B = h_B.size() * sizeof(float);
     size_t size_C = M * N * sizeof(float);
-    constexpr int blockSize = 16; // Assuming square blocks for simplicity
+    constexpr int blockSize = 16;  // Assuming square blocks for simplicity
     dim3 block(blockSize, blockSize);
     dim3 grid((N + blockSize - 1) / blockSize, (M + blockSize - 1) / blockSize);
     float *d_A = nullptr, *d_B = nullptr, *d_C = nullptr;
@@ -33,7 +35,8 @@ std::vector<float> matrix_multiplication_origin(const std::vector<float>& h_A,
             hipFree(d_A);
             hipFree(d_B);
             hipFree(d_C);
-            throw std::runtime_error("Kernel launch failed: " + std::string(hipGetErrorString(err)));
+            throw std::runtime_error("Kernel launch failed: " +
+                                     std::string(hipGetErrorString(err)));
         }
 
         // Copy result back to host
@@ -49,7 +52,7 @@ std::vector<float> matrix_multiplication_origin(const std::vector<float>& h_A,
         hipFree(d_A);
         hipFree(d_B);
         hipFree(d_C);
-        throw; // Re-throw the exception after cleanup
+        throw;  // Re-throw the exception after cleanup
     }
-    return {}; // This line is never reached, but added to satisfy the compiler
+    return {};  // This line is never reached, but added to satisfy the compiler
 }

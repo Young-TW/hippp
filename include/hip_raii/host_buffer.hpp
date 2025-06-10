@@ -2,15 +2,16 @@
 
 #include <hip/hip_runtime.h>
 
-#include <stdexcept>
 #include <cstddef>
+#include <stdexcept>
 template <typename T>
 class HipHostBuffer {
 public:
     /// @brief Allocate host memory for @p elements elements of type T.
     explicit HipHostBuffer(std::size_t elements)
         : ptr_(nullptr), elements_(elements) {
-        hipError_t err = hipHostMalloc(reinterpret_cast<void**>(&ptr_), elements * sizeof(T));
+        hipError_t err = hipHostMalloc(reinterpret_cast<void**>(&ptr_),
+                                       elements * sizeof(T));
         if (err != hipSuccess) {
             throw std::runtime_error("hipHostMalloc failed");
         }
@@ -22,22 +23,21 @@ public:
         }
     }
 
-    HipHostBuffer(const HipHostBuffer&)            = delete;
+    HipHostBuffer(const HipHostBuffer&) = delete;
     HipHostBuffer& operator=(const HipHostBuffer&) = delete;
 
     HipHostBuffer(HipHostBuffer&& other) noexcept
         : ptr_(other.ptr_), elements_(other.elements_) {
-        other.ptr_      = nullptr;
+        other.ptr_ = nullptr;
         other.elements_ = 0;
     }
 
     HipHostBuffer& operator=(HipHostBuffer&& other) noexcept {
         if (this != &other) {
-            if (ptr_)
-                hipHostFree(ptr_);
-            ptr_          = other.ptr_;
-            elements_     = other.elements_;
-            other.ptr_    = nullptr;
+            if (ptr_) hipHostFree(ptr_);
+            ptr_ = other.ptr_;
+            elements_ = other.elements_;
+            other.ptr_ = nullptr;
             other.elements_ = 0;
         }
         return *this;

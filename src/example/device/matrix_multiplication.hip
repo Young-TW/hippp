@@ -2,13 +2,8 @@
 
 // C = A * B
 // A: M×K, B: K×N, C: M×N
-__global__ void matrix_multiplication(const float* A,
-                                      const float* B,
-                                      float*       C,
-                                      int          M,
-                                      int          N,
-                                      int          K)
-{
+__global__ void matrix_multiplication(const float* A, const float* B, float* C,
+                                      int M, int N, int K) {
     int row = blockIdx.y * blockDim.y + threadIdx.y;
     int col = blockIdx.x * blockDim.x + threadIdx.x;
 

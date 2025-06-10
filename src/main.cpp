@@ -1,5 +1,5 @@
-#include "benchmark/vector_add.hpp"
 #include "benchmark/matrix_multiplication.hpp"
+#include "benchmark/vector_add.hpp"
 
 int main(int argc, char* argv[]) {
     benchmark_vector_add(100);

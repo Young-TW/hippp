@@ -1,7 +1,8 @@
 #pragma once
 #include <hip/hip_runtime.h>
-#include <stdexcept>
+
 #include <cstddef>
+#include <stdexcept>
 
 template <typename T>
 class HipBuffer {
@@ -22,22 +23,21 @@ public:
         }
     }
 
-    HipBuffer(const HipBuffer&)            = delete;
+    HipBuffer(const HipBuffer&) = delete;
     HipBuffer& operator=(const HipBuffer&) = delete;
 
     HipBuffer(HipBuffer&& other) noexcept
         : ptr_(other.ptr_), elements_(other.elements_) {
-        other.ptr_      = nullptr;
+        other.ptr_ = nullptr;
         other.elements_ = 0;
     }
 
     HipBuffer& operator=(HipBuffer&& other) noexcept {
         if (this != &other) {
-            if (ptr_)
-                hipFree(ptr_);
-            ptr_          = other.ptr_;
-            elements_     = other.elements_;
-            other.ptr_    = nullptr;
+            if (ptr_) hipFree(ptr_);
+            ptr_ = other.ptr_;
+            elements_ = other.elements_;
+            other.ptr_ = nullptr;
             other.elements_ = 0;
         }
         return *this;
@@ -75,6 +75,6 @@ public:
     }
 
 private:
-    T*          ptr_;
+    T* ptr_;
     std::size_t elements_;
 };

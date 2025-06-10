@@ -1,6 +1,7 @@
 #pragma once
 
 #include <hip/hip_runtime.h>
+
 #include <stdexcept>
 
 class HipEvent {
@@ -8,7 +9,8 @@ public:
     HipEvent() {
         hipError_t err = hipEventCreate(&event_);
         if (err != hipSuccess) {
-            throw std::runtime_error("hipEventCreate failed: " + std::string(hipGetErrorString(err)));
+            throw std::runtime_error("hipEventCreate failed: " +
+                                     std::string(hipGetErrorString(err)));
         }
     }
 
@@ -23,7 +25,8 @@ public:
     void record(hipStream_t stream = nullptr) {
         hipError_t err = hipEventRecord(event_, stream);
         if (err != hipSuccess) {
-            throw std::runtime_error("hipEventRecord failed: " + std::string(hipGetErrorString(err)));
+            throw std::runtime_error("hipEventRecord failed: " +
+                                     std::string(hipGetErrorString(err)));
         }
     }
 
@@ -32,7 +35,8 @@ public:
         float ms = 0.0f;
         hipError_t err = hipEventElapsedTime(&ms, start.event_, stop.event_);
         if (err != hipSuccess) {
-            throw std::runtime_error("hipEventElapsedTime failed: " + std::string(hipGetErrorString(err)));
+            throw std::runtime_error("hipEventElapsedTime failed: " +
+                                     std::string(hipGetErrorString(err)));
         }
         return ms;
     }

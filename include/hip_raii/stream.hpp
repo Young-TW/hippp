@@ -4,18 +4,12 @@
 
 class HipStream {
 public:
-    HipStream() {
-        hipStreamCreate(&stream_);
-    }
-    ~HipStream() {
-        hipStreamDestroy(stream_);
-    }
+    HipStream() { hipStreamCreate(&stream_); }
+    ~HipStream() { hipStreamDestroy(stream_); }
 
     operator hipStream_t() const { return stream_; }
 
-    void sync() const {
-        hipStreamSynchronize(stream_);
-    }
+    void sync() const { hipStreamSynchronize(stream_); }
 
 private:
     hipStream_t stream_;
