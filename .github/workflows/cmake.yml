@@ -19,7 +19,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y cmake g++ ninja-build wget
           wget -qO - http://repo.radeon.com/rocm/rocm.gpg.key | sudo apt-key add -
-          echo 'deb [arch=amd64] http://repo.radeon.com/rocm/apt/6.0/ ubuntu main' | sudo tee /etc/apt/sources.list.d/rocm.list
+          echo 'deb [arch=amd64] http://repo.radeon.com/rocm/apt/6.0/ focal main' | sudo tee /etc/apt/sources.list.d/rocm.list
           sudo apt-get update
           sudo apt-get install -y rocm-dev
           echo "/opt/rocm/bin" >> $GITHUB_PATH
