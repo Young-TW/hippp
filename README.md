@@ -18,6 +18,13 @@ hippp is a C++ wrapper for the HIP API, designed to simplify the process of writ
 - [ ] **Memory Pools** (`hipMemPoolCreate` / `hipMemPoolDestroy`) → `HipMemPool`
 - [ ] **External Library Handles** (rocBLAS, rocFFT, rocRAND) → `RocblasHandle`, `RocfftPlan`, `RocrandGenerator`
 
+## Requirements
+
+- Compiler of C++17 or later
+- hipcc (AMD ROCm)
+- CMake 3.10 or later
+- A compatible GPU (AMD Radeon or AMD Instinct, or NVIDIA with HIP support)
+
 ## Benchmark
 
 | Tasks | Size | GPU | Origin | RAII |
