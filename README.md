@@ -5,7 +5,7 @@ hippp is a C++ wrapper for the HIP API, designed to simplify the process of writ
 ## Features
 
 - [x] **Device Memory** (`hipMalloc` / `hipFree`) → `HipBuffer<T>`
-- [ ] **Pinned Host Memory** (`hipHostMalloc` / `hipHostFree`) → `HipHostBuffer<T>`
+- [x] **Pinned Host Memory** (`hipHostMalloc` / `hipHostFree`) → `HipHostBuffer<T>`
 - [x] **Streams** (`hipStreamCreate` / `hipStreamDestroy`) → `HipStream`
 - [x] **Events** (`hipEventCreate` / `hipEventDestroy`) → `HipEvent`
 - [ ] **Graphs** (`hipGraphCreate` / `hipGraphDestroy`) → `HipGraph`
