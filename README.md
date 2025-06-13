@@ -10,7 +10,8 @@ hippp is a C++ wrapper for the HIP API, designed to simplify the process of writ
 - [x] **Events** (`hipEventCreate` / `hipEventDestroy`) → `HipEvent`
 - [ ] **Graphs** (`hipGraphCreate` / `hipGraphDestroy`) → `HipGraph`
 - [ ] **Graph Executable** (`hipGraphExecCreate` / `hipGraphExecDestroy`) → `HipGraphExec`
-- [ ] **Modules & Kernels** (`hipModuleLoad` / `hipModuleUnload`, `hipModuleGetFunction`) → `HipModule`, `HipFunction`
+- [ ] **Modules** (`hipModuleLoad` / `hipModuleUnload`, `hipModuleGetFunction`) → `HipModule`, `HipFunction`
+- [ ] **Kernels** (`hipLaunchKernel`) → `HipKernel`
 - [ ] **Contexts** (`hipCtxCreate` / `hipCtxDestroy`) → `HipContext`
 - [ ] **Arrays** (`hipArrayCreate` / `hipArrayDestroy`, `hipMipmappedArrayCreate` / `hipMipmappedArrayDestroy`) → `HipArray`, `HipMipmappedArray`
 - [ ] **Texture Objects** (`hipTexObjectCreate` / `hipTexObjectDestroy`) → `HipTextureObject`
