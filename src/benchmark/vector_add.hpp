@@ -9,6 +9,8 @@ int benchmark_vector_add(unsigned runs) {
     std::vector<float> h_a(1 << 20, 1.0f);
     std::vector<float> h_b(1 << 20, 2.0f);
 
+    // Warm-up runs to ensure the kernel is compiled and ready
+    // This is important for accurate benchmarking
     vector_add_raii(h_a, h_b);
     vector_add_origin(h_a, h_b);
 

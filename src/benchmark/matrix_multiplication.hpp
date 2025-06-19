@@ -14,6 +14,11 @@ int benchmark_matrix_multiplication(unsigned runs) {
     int N = 1024;                  // Number of columns in B and C
     int K = 1024;                  // Number of columns in A and rows in B
 
+    // Warm-up runs to ensure the kernel is compiled and ready
+    // This is important for accurate benchmarking
+    matrix_multiplication_raii(h_a, h_b, M, N, K);
+    matrix_multiplication_origin(h_a, h_b, M, N, K);
+
     long long total_duration_raii = 0, total_duration_origin = 0;
 
     for (unsigned i = 0; i < runs; ++i) {
