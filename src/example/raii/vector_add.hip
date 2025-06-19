@@ -21,8 +21,8 @@ std::vector<float> vector_add_raii(const std::vector<float>& h_a,
     a.copyFromHostAsync(h_a.data(), stream);
     b.copyFromHostAsync(h_b.data(), stream);
 
-    vector_add<<<numBlocks, blockSize, 0, stream>>>(a.get(), b.get(), c.get(),
-                                                    N);
+    HipKernel kernel(dim3(numBlocks), dim3(blockSize), 0, stream);
+    kernel.launch(vector_add, a.get(), b.get(), c.get(), N);
 
     std::vector<float> h_c(N);
     c.copyToHostAsync(h_c.data(), stream);
