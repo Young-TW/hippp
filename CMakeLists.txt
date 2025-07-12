@@ -11,6 +11,7 @@ set(CMAKE_CXX_STANDARD 23)
 set(HIP_COMPILER /opt/rocm/bin/hipcc)
 set(CMAKE_HIP_COMPILER /opt/rocm/bin/hipcc)
 
+set(HIP_ENABLE_LANG OFF)
 # HIP 工具鏈設定
 find_package(HIP REQUIRED)
 
