@@ -1,42 +1,54 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(hippp LANGUAGES CXX HIP VERSION 0.0.0)
-add_definitions(-D__HIP_PLATFORM_AMD__)
+# Check if we're building in testing mode (without HIP hardware)
+option(BUILD_TESTS_ONLY "Build only tests with mock HIP" OFF)
 
-include_directories(include)
+if(BUILD_TESTS_ONLY)
+    project(hippp LANGUAGES CXX VERSION 0.0.0)
+    set(CMAKE_CXX_STANDARD 23)
+    include_directories(include)
+    include_directories(tests/mock_hip)
+else()
+    project(hippp LANGUAGES CXX HIP VERSION 0.0.0)
+    add_definitions(-D__HIP_PLATFORM_AMD__)
+    
+    include_directories(include)
+    
+    set(CMAKE_CXX_STANDARD 23)
+    
+    # Specify the HIP compiler path
+    set(HIP_COMPILER /opt/rocm/bin/hipcc)
+    set(CMAKE_HIP_COMPILER /opt/rocm/bin/hipcc)
+    
+    set(HIP_ENABLE_LANG OFF)
+    # HIP toolchain settings
+    find_package(HIP REQUIRED)
+endif()
 
-set(CMAKE_CXX_STANDARD 23)
+# Add HIP source files (only when not in test-only mode)
+if(NOT BUILD_TESTS_ONLY)
+    add_executable(hippp
+        src/main.cpp
+        src/example/origin/vector_add.hip
+        src/example/origin/matrix_multiplication.hip
+        src/example/raii/vector_add.hip
+        src/example/raii/matrix_multiplication.hip
+        src/example/device/vector_add.hip
+        src/example/device/matrix_multiplication.hip
+    )
 
-# Specify the HIP compiler path
-set(HIP_COMPILER /opt/rocm/bin/hipcc)
-set(CMAKE_HIP_COMPILER /opt/rocm/bin/hipcc)
-
-set(HIP_ENABLE_LANG OFF)
-# HIP toolchain settings
-find_package(HIP REQUIRED)
-
-# Add HIP source files
-add_executable(hippp
-    src/main.cpp
-    src/example/origin/vector_add.hip
-    src/example/origin/matrix_multiplication.hip
-    src/example/raii/vector_add.hip
-    src/example/raii/matrix_multiplication.hip
-    src/example/device/vector_add.hip
-    src/example/device/matrix_multiplication.hip
-)
-
-# Set HIP as the language for .hip files
-set_source_files_properties(
-    src/main.cpp
-    src/example/origin/vector_add.hip
-    src/example/origin/matrix_multiplication.hip
-    src/example/raii/vector_add.hip
-    src/example/raii/matrix_multiplication.hip
-    src/example/device/vector_add.hip
-    src/example/device/matrix_multiplication.hip
-    PROPERTIES LANGUAGE HIP
-)
+    # Set HIP as the language for .hip files
+    set_source_files_properties(
+        src/main.cpp
+        src/example/origin/vector_add.hip
+        src/example/origin/matrix_multiplication.hip
+        src/example/raii/vector_add.hip
+        src/example/raii/matrix_multiplication.hip
+        src/example/device/vector_add.hip
+        src/example/device/matrix_multiplication.hip
+        PROPERTIES LANGUAGE HIP
+    )
+endif()
 
 # Add Catch2 for testing
 include(FetchContent)
@@ -53,7 +65,11 @@ add_executable(hippp_tests
     tests/test_main.cpp
 )
 
-target_include_directories(hippp_tests PRIVATE /opt/rocm/include)
+if(BUILD_TESTS_ONLY)
+    target_include_directories(hippp_tests PRIVATE tests/mock_hip)
+else()
+    target_include_directories(hippp_tests PRIVATE /opt/rocm/include)
+endif()
 
 target_link_libraries(hippp_tests PRIVATE Catch2::Catch2WithMain)
 
