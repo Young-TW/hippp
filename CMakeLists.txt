@@ -7,15 +7,15 @@ include_directories(include)
 
 set(CMAKE_CXX_STANDARD 23)
 
-# 指定 HIP 編譯器路徑
+# Specify the HIP compiler path
 set(HIP_COMPILER /opt/rocm/bin/hipcc)
 set(CMAKE_HIP_COMPILER /opt/rocm/bin/hipcc)
 
 set(HIP_ENABLE_LANG OFF)
-# HIP 工具鏈設定
+# HIP toolchain settings
 find_package(HIP REQUIRED)
 
-# 加入 HIP 原始碼
+# Add HIP source files
 add_executable(hippp
     src/main.cpp
     src/example/origin/vector_add.hip
@@ -26,7 +26,7 @@ add_executable(hippp
     src/example/device/matrix_multiplication.hip
 )
 
-# 標記為 HIP 檔案
+# Set HIP as the language for .hip files
 set_source_files_properties(
     src/main.cpp
     src/example/origin/vector_add.hip
@@ -37,3 +37,24 @@ set_source_files_properties(
     src/example/device/matrix_multiplication.hip
     PROPERTIES LANGUAGE HIP
 )
+
+# Add Catch2 for testing
+include(FetchContent)
+FetchContent_Declare(
+  Catch2
+  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+  GIT_TAG        v3.5.4
+)
+FetchContent_MakeAvailable(Catch2)
+
+enable_testing()
+
+add_executable(hippp_tests
+    tests/test_main.cpp
+)
+
+target_include_directories(hippp_tests PRIVATE /opt/rocm/include)
+
+target_link_libraries(hippp_tests PRIVATE Catch2::Catch2WithMain)
+
+add_test(NAME hippp_tests COMMAND hippp_tests)
