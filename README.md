@@ -6,14 +6,14 @@ hippp is a C++ wrapper for the HIP API, designed to simplify the process of writ
 
 ## Features
 
-- [x] **Device Memory** (`hipMalloc` / `hipFree`) → `HipBuffer<T>`
-- [x] **Pinned Host Memory** (`hipHostMalloc` / `hipHostFree`) → `HipHostBuffer<T>`
-- [x] **Streams** (`hipStreamCreate` / `hipStreamDestroy`) → `HipStream`
-- [x] **Events** (`hipEventCreate` / `hipEventDestroy`) → `HipEvent`
+- [X] **Device Memory** (`hipMalloc` / `hipFree`) → `HipBuffer<T>`
+- [X] **Pinned Host Memory** (`hipHostMalloc` / `hipHostFree`) → `HipHostBuffer<T>`
+- [X] **Streams** (`hipStreamCreate` / `hipStreamDestroy`) → `HipStream`
+- [X] **Events** (`hipEventCreate` / `hipEventDestroy`) → `HipEvent`
 - [ ] **Graphs** (`hipGraphCreate` / `hipGraphDestroy`) → `HipGraph`
 - [ ] **Graph Executable** (`hipGraphExecCreate` / `hipGraphExecDestroy`) → `HipGraphExec`
 - [ ] **Modules** (`hipModuleLoad` / `hipModuleUnload`, `hipModuleGetFunction`) → `HipModule`, `HipFunction`
-- [x] **Kernels** (`hipLaunchKernel`) → `HipKernel`
+- [X] **Kernels** (`hipLaunchKernel`) → `HipKernel`
 - [ ] **Contexts** (`hipCtxCreate` / `hipCtxDestroy`) → `HipContext`
 - [ ] **Arrays** (`hipArrayCreate` / `hipArrayDestroy`, `hipMipmappedArrayCreate` / `hipMipmappedArrayDestroy`) → `HipArray`, `HipMipmappedArray`
 - [ ] **Texture Objects** (`hipTexObjectCreate` / `hipTexObjectDestroy`) → `HipTextureObject`
@@ -30,7 +30,9 @@ hippp is a C++ wrapper for the HIP API, designed to simplify the process of writ
 
 ## Benchmark
 
-| Tasks | Size | GPU | Origin | RAII |
-|-------|------|-----|--------|------|
-| Vector Addition | 1,048576 | RX 7600 XT | 2003 µs | 1995 µs |
-| Matrix Multiplication | 1,024 x 1,024 | RX 7600 XT | 7215 µs | 8008 µs |
+| Tasks                 | Size          | GPU        | ROCm Version | Origin   | RAII     |
+| --------------------- | ------------- | ---------- | ------------ | -------- | -------- |
+| Vector Addition       | 1,048576      | RX 7600 XT | 6.3.0        | 2003 µs | 1995 µs |
+| Matrix Multiplication | 1,024 x 1,024 | RX 7600 XT | 6.3.0        | 7215 µs | 8008 µs |
+| Vector Addition       | 1,048576      | RX 9070 XT | 7.0.0        | 1214 µs | 1187 µs |
+| Matrix Multiplication | 1,024 x 1,024 | RX 9070 XT | 7.0.0        | 2695 µs | 3763 µs |
