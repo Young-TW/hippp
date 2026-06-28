@@ -25,8 +25,8 @@ public:
     /// Any arguments after @p kernel are forwarded to the underlying kernel.
     template <typename KernelFunc, typename... Args>
     void launch(KernelFunc kernel, Args... args) const {
-        hipLaunchKernelGGL(kernel, gridDim_, blockDim_, sharedMemBytes_, stream_,
-                           args...);
+        hipLaunchKernelGGL(kernel, gridDim_, blockDim_, sharedMemBytes_,
+                           stream_, args...);
         hipError_t err = hipGetLastError();
         if (err != hipSuccess) {
             throw std::runtime_error("hipLaunchKernel failed: " +
@@ -49,4 +49,3 @@ private:
     std::size_t sharedMemBytes_{};
     hipStream_t stream_{};
 };
-

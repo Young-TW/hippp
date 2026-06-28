@@ -1,6 +1,7 @@
 #pragma once
 
 #include <hip/hip_runtime.h>
+
 #include <stdexcept>
 #include <string>
 
@@ -9,12 +10,14 @@ public:
     explicit HipContext(int device_id = 0) {
         hipError_t err = hipSetDevice(device_id);
         if (err != hipSuccess) {
-            throw std::runtime_error("hipSetDevice failed: " + std::string(hipGetErrorString(err)));
+            throw std::runtime_error("hipSetDevice failed: " +
+                                     std::string(hipGetErrorString(err)));
         }
 
         err = hipCtxCreate(&ctx_, 0, device_id);
         if (err != hipSuccess) {
-            throw std::runtime_error("hipCtxCreate failed: " + std::string(hipGetErrorString(err)));
+            throw std::runtime_error("hipCtxCreate failed: " +
+                                     std::string(hipGetErrorString(err)));
         }
     }
 
