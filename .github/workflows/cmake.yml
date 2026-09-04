@@ -60,3 +60,25 @@ jobs:
       # Build your program with the given configuration
       - name: Build all applications
         run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+
+  # Unit tests running on AMD's official HIP CPU Runtime (ROCm/HIP-CPU).
+  # No GPU is required, so this job runs on GitHub-hosted runners.
+  unit-tests-hipcpu:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update &&
+          sudo apt-get install -y build-essential cmake git libtbb-dev
+
+      - uses: actions/checkout@v4
+
+      - name: Configure tests (fetches ROCm/HIP-CPU)
+        run: cmake -S tests/hipcpu -B build-hipcpu -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+
+      - name: Build tests
+        run: cmake --build build-hipcpu --config ${{env.BUILD_TYPE}} -j
+
+      - name: Run unit tests
+        run: ctest --test-dir build-hipcpu --output-on-failure

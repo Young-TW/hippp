@@ -28,6 +28,18 @@ hippp is a C++ wrapper for the HIP API, designed to simplify the process of writ
 - CMake 3.10 or later
 - A compatible GPU (AMD Radeon or AMD Instinct, or NVIDIA with HIP support)
 
+## Unit Tests (no GPU required)
+
+Unit tests for the RAII wrappers (`HipBuffer`, `HipHostBuffer`, `HipStream`, `HipEvent`, `HipKernel`) run on AMD's official [HIP CPU Runtime](https://github.com/ROCm/HIP-CPU), which executes unmodified HIP code on the CPU. Neither a GPU nor a ROCm installation is needed — only a C++ compiler, Intel oneTBB (`libtbb-dev`), and CMake ≥ 3.14:
+
+```bash
+cmake -S tests/hipcpu -B build-hipcpu -DCMAKE_BUILD_TYPE=Release
+cmake --build build-hipcpu -j
+ctest --test-dir build-hipcpu --output-on-failure
+```
+
+Note: HIP-CPU is archived and implements only a subset of the HIP API; wrappers that need unsupported APIs (arrays, textures, graphs, modules, ...) are not covered by these tests.
+
 ## Benchmark
 
 | Tasks                 | Size          | GPU        | ROCm Version | Origin   | RAII     |
