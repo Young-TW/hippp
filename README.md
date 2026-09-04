@@ -12,13 +12,13 @@ hippp is a C++ wrapper for the HIP API, designed to simplify the process of writ
 - [X] **Events** (`hipEventCreate` / `hipEventDestroy`) → `HipEvent`
 - [ ] **Graphs** (`hipGraphCreate` / `hipGraphDestroy`) → `HipGraph`
 - [ ] **Graph Executable** (`hipGraphExecCreate` / `hipGraphExecDestroy`) → `HipGraphExec`
-- [ ] **Modules** (`hipModuleLoad` / `hipModuleUnload`, `hipModuleGetFunction`) → `HipModule`, `HipFunction`
+- [X] **Modules** (`hipModuleLoad` / `hipModuleUnload`, `hipModuleGetFunction`) → `HipModule`, `HipFunction`
 - [X] **Kernels** (`hipLaunchKernel`) → `HipKernel`
-- [ ] **Contexts** (`hipCtxCreate` / `hipCtxDestroy`) → `HipContext`
+- [X] **Contexts** (`hipCtxCreate` / `hipCtxDestroy`) → `HipContext`
 - [ ] **Arrays** (`hipArrayCreate` / `hipArrayDestroy`, `hipMipmappedArrayCreate` / `hipMipmappedArrayDestroy`) → `HipArray`, `HipMipmappedArray`
 - [ ] **Texture Objects** (`hipTexObjectCreate` / `hipTexObjectDestroy`) → `HipTextureObject`
 - [ ] **Surface Objects** (`hipSurfObjectCreate` / `hipSurfObjectDestroy`) → `HipSurfaceObject`
-- [ ] **Memory Pools** (`hipMemPoolCreate` / `hipMemPoolDestroy`) → `HipMemPool`
+- [X] **Memory Pools** (`hipMallocAsync` / `hipFreeAsync`, default pool) → `HipMemPool` (explicit `hipMemPoolCreate` custom pools not included)
 - [ ] **External Library Handles** (rocBLAS, rocFFT, rocRAND) → `RocblasHandle`, `RocfftPlan`, `RocrandGenerator`
 
 ## Requirements
@@ -30,7 +30,7 @@ hippp is a C++ wrapper for the HIP API, designed to simplify the process of writ
 
 ## Unit Tests (no GPU required)
 
-Unit tests for the RAII wrappers (`HipBuffer`, `HipHostBuffer`, `HipStream`, `HipEvent`, `HipKernel`) run on AMD's official [HIP CPU Runtime](https://github.com/ROCm/HIP-CPU), which executes unmodified HIP code on the CPU. Neither a GPU nor a ROCm installation is needed — only a C++ compiler, Intel oneTBB (`libtbb-dev`), and CMake ≥ 3.14:
+Unit tests for the RAII wrappers (`HipBuffer`, `HipHostBuffer`, `HipStream`, `HipEvent`, `HipKernel`, `HipContext`, `HipModule`/`HipFunction`, `HipMemPool`) run on AMD's official [HIP CPU Runtime](https://github.com/ROCm/HIP-CPU), which executes unmodified HIP code on the CPU. Neither a GPU nor a ROCm installation is needed — only a C++ compiler, Intel oneTBB (`libtbb-dev`), and CMake ≥ 3.14:
 
 ```bash
 cmake -S tests/hipcpu -B build-hipcpu -DCMAKE_BUILD_TYPE=Release
@@ -38,7 +38,7 @@ cmake --build build-hipcpu -j
 ctest --test-dir build-hipcpu --output-on-failure
 ```
 
-Note: HIP-CPU is archived and implements only a subset of the HIP API; wrappers that need unsupported APIs (arrays, textures, graphs, modules, ...) are not covered by these tests.
+Note: HIP-CPU is archived and implements only a subset of the HIP API; wrappers that need unsupported APIs (arrays, textures, surfaces, graphs, explicit memory pools, external libraries) are not covered by these tests. Module-loaded kernels additionally cannot take arguments and run one fiber per block under HIP-CPU (data exchange through module globals); on GPU HIP the same `HipFunction` API passes arguments normally.
 
 ## Benchmark
 

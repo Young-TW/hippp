@@ -4,6 +4,7 @@
 #include "hip_raii/buffer.hpp"
 #include "hip_raii/context.hpp"
 #include "hip_raii/event.hpp"
+#include "hip_raii/function.hpp"
 #include "hip_raii/graph.hpp"
 #include "hip_raii/graph_executable.hpp"
 #include "hip_raii/host_buffer.hpp"

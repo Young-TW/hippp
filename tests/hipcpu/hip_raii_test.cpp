@@ -16,10 +16,18 @@
 
 #include "example/device/vector_add.h"
 #include "hip_raii/buffer.hpp"
+#include "hip_raii/context.hpp"
 #include "hip_raii/event.hpp"
 #include "hip_raii/host_buffer.hpp"
 #include "hip_raii/kernel.hpp"
+#include "hip_raii/memory_pool.hpp"
+#include "hip_raii/module.hpp"
 #include "hip_raii/stream.hpp"
+
+// Path of the shared object with module-loaded kernels, provided by CMake.
+#ifndef HIPPP_MODULE_KERNEL_PATH
+    #define HIPPP_MODULE_KERNEL_PATH "module_kernels.so"
+#endif
 
 namespace {
 
@@ -178,6 +186,82 @@ void test_end_to_end_raii_flow() {
     for (std::size_t i = 0; i < N; ++i) CHECK(h_c[i] == 7.0f);
 }
 
+void test_context() {
+    std::puts("[test] HipContext");
+    // hipCtxCreate is a functional no-op under HIP-CPU; the test verifies
+    // the wrapper's error checking and ownership semantics.
+    HipContext ctx(0);
+    HipContext moved(std::move(ctx));
+    CHECK(ctx.get() == nullptr);
+}
+
+void test_module_and_function() {
+    std::puts("[test] HipModule + HipFunction");
+
+    HipModule mod(HIPPP_MODULE_KERNEL_PATH);
+    CHECK(static_cast<bool>(mod));
+
+    HipFunction fn = mod.getFunction("scale_by_two");
+    CHECK(static_cast<bool>(fn));
+
+    // Move ownership of the module; functions stay usable afterwards.
+    HipModule moved(std::move(mod));
+    CHECK(mod.get() == nullptr);
+    CHECK(static_cast<bool>(moved));
+
+    constexpr int N = 1024;
+    std::vector<float> h_in(N), h_out(N, 0.0f);
+    for (int i = 0; i < N; ++i) h_in[i] = static_cast<float>(i);
+
+    HipBuffer<float> in(N), out(N);
+    in.copyFromHostAsync(h_in.data());
+
+    // Module kernels have no parameters under HIP-CPU: inject the buffer
+    // pointers through module globals.
+    void* gin = moved.getGlobal("scale_in");
+    void* gout = moved.getGlobal("scale_out");
+    CHECK(gin != nullptr);
+    CHECK(gout != nullptr);
+    float* pin = in.get();
+    float* pout = out.get();
+    CHECK(hipMemcpyToSymbol(gin, &pin, sizeof(pin)) == hipSuccess);
+    CHECK(hipMemcpyToSymbol(gout, &pout, sizeof(pout)) == hipSuccess);
+
+    HipStream stream;
+    fn.launch(dim3(N / 64), dim3(64), 0, stream);
+    stream.sync();
+
+    out.copyToHostAsync(h_out.data(), stream);
+    stream.sync();
+    for (int i = 0; i < N; ++i) CHECK(h_out[i] == 2.0f * h_in[i]);
+}
+
+void test_memory_pool() {
+    std::puts("[test] HipMemPool (hipMallocAsync/hipFreeAsync)");
+    HipStream stream;
+    HipMemPool pool(stream);
+    CHECK(pool.stream() == static_cast<hipStream_t>(stream));
+
+    constexpr std::size_t N = 4096;
+    unsigned char* p = nullptr;
+    pool.allocateAsync(p, N * sizeof(float));
+    // HIP-CPU performs the allocation as a stream task; synchronize before
+    // the pointer value is consumed (see HipMemPool class note).
+    stream.sync();
+    CHECK(p != nullptr);
+
+    CHECK(hipMemsetAsync(p, 0xAB, N * sizeof(float), stream) == hipSuccess);
+    stream.sync();
+
+    std::vector<unsigned char> h(N * sizeof(float));
+    CHECK(hipMemcpy(h.data(), p, h.size(), hipMemcpyDeviceToHost) ==
+          hipSuccess);
+    for (std::size_t i = 0; i < h.size(); ++i) CHECK(h[i] == 0xAB);
+
+    pool.deallocateAsync(p);
+    stream.sync();
+}
+
 }  // namespace
 
 int main() {
@@ -188,6 +272,9 @@ int main() {
     test_event();
     test_kernel_vector_add();
     test_end_to_end_raii_flow();
+    test_context();
+    test_module_and_function();
+    test_memory_pool();
 
     if (g_failures == 0) {
         std::puts("ALL TESTS PASSED");

@@ -27,6 +27,15 @@ add_executable(hip_raii_test
     ${CMAKE_CURRENT_SOURCE_DIR}/../../src/example/device/vector_add.hip
 )
 
+# Shared object loaded by the HipModule/HipFunction test (HIP-CPU loads
+# shared libraries instead of GPU code objects).
+add_library(hipcpu_module_kernels SHARED module_kernels.cpp)
+target_link_libraries(hipcpu_module_kernels PRIVATE hip_cpu_rt::hip_cpu_rt)
+
+add_dependencies(hip_raii_test hipcpu_module_kernels)
+target_compile_definitions(hip_raii_test PRIVATE
+    HIPPP_MODULE_KERNEL_PATH="$<TARGET_FILE:hipcpu_module_kernels>")
+
 # The host compiler does not know the .hip extension; force C++.
 set_source_files_properties(
     ${CMAKE_CURRENT_SOURCE_DIR}/../../src/example/device/vector_add.hip
